@@ -20,6 +20,21 @@ def scrape_with_prefix(base_url, prefix):
         driver.quit()
         return setup_driver()
 
+    def extract_content(driver):
+        # Define tags and classes to exclude
+        exclude_tags = ['header', 'footer', 'nav', 'aside']
+        exclude_classes = ['header', 'footer', 'sidebar', 'navigation', 'menu',
+                           'main-menu', 'footer-menu', 'widget', 'sidebar-widget', 'ad', 'advertisement']
+
+        content = ''
+        elements = driver.find_elements(By.XPATH, "//*")
+        for element in elements:
+            tag = element.tag_name.lower()
+            class_name = element.get_attribute("class").lower()
+            if tag not in exclude_tags and not any(cls in class_name for cls in exclude_classes):
+                content += element.text + '\n'
+        return content
+
     driver = setup_driver()
     added_urls = set()
     urls_to_visit = [base_url]
@@ -31,9 +46,9 @@ def scrape_with_prefix(base_url, prefix):
             driver.get(current_url)
             print(f"Visiting: {current_url}")
 
-            # Extract and print page content
-            page_content = driver.find_element(By.TAG_NAME, "body").text
-            print(f"Content: {page_content[:100]}...")
+            # Extract and print filtered page content
+            page_content = extract_content(driver)
+            print(f"Filtered Content: {page_content[:100]}...")
 
             # Finding and processing links
             links = driver.find_elements(By.TAG_NAME, 'a')
@@ -62,7 +77,6 @@ def scrape_with_prefix(base_url, prefix):
 
 
 # Example usage
-
 prefix = 'https://docs.llamaindex.ai/'
 base_url = 'https://docs.llamaindex.ai/'
 scrape_with_prefix(base_url, prefix)
